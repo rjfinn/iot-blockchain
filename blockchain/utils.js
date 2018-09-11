@@ -1,83 +1,188 @@
 'use strict';
+const r = require('jsrsasign');
+const ec = new r.ECDSA({ 'curve': 'secp256k1' });
 const crypto = require('crypto');
-const rsa = require('node-rsa');
+//const rsa = require('node-rsa');
+const fs = require('fs');
 
-const algo = 'sha256';
-const bits = 1024;
+const keystore = './keystore';
+const hash_algo = 'sha256';
+const sign_algo = 'SHA256withECDSA';
+const curve = 'secp256k1';
+const decimalPlaces = 5;
+// const bits = 2048;
 
-const hash_block = (block) => {
-  var block_string = JSON.stringify(block);
-  return hash(block_string);
-};
+// const hash_block = (block) => {
+//   var block_string = JSON.stringify(block);
+//   return hash(block_string);
+// };
 
 const hash = (text) => {
-  return crypto.createHash(algo)
+  return crypto.createHash(hash_algo)
     .update(text)
     .digest('hex')
     .toString();
-}
+};
+
+// const createPrivateKey = (returnText = false) => {
+//   var key = new rsa({b: bits});
+//   key.generateKeyPair();
+//   if(returnText) {
+//     return key.exportKey('private');
+//   }
+//   return key;
+// };
 
 const createPrivateKey = (returnText = false) => {
-  var key = new rsa(bits);
-  key.generateKeyPair();
+  const key = crypto.createECDH(curve);
+  key.generateKeys();
   if(returnText) {
-    return key.exportKey('private');
+    return key.getPrivateKey('hex');
+    //return key.getPrivateKey().toString('hex');
   }
   return key;
 };
 
-const createPrivateKeyAsync = async (returnText = false) => {
-  return Promise.resolve(createPrivateKey(returnText));
+const getPrivateKeyText = (privateKey) => {
+  return privateKey.getPrivateKey('hex');
 }
 
-const getPublicKey = (privateKey, returnText = false) => {
-  var key = new rsa(privateKey);
+const createPrivateKeyAsync = async (returnText = false) => {
+  return Promise.resolve(createPrivateKey(returnText));
+};
+
+const getPublicKey = (privateKey, returnText = true) => {
+  var key = stringToKey(privateKey);
   if(returnText) {
-    return key.exportKey('public');
+    return key.getPublicKey('hex');
+  }
+  return key;
+};
+
+const stringToKey = (key) => {
+  if(typeof key === 'string' || Buffer.isBuffer(key)) {
+    //return new rsa(keyText);
+    var privKey = crypto.createECDH(curve).setPrivateKey(key,'hex');
+    return privKey;
   }
   return key;
 };
 
 // sign data with the private RSA key
+// const sign = (privateKey, data) => {
+//   var key = stringToKey(privateKey);
+//   if(key.isPrivate()) {
+//     return key.sign(Buffer.from(data,'utf8')).toString('hex');
+//   } else {
+//     throw('Cannot sign with a public key');
+//   }
+// };
+
 const sign = (privateKey, data) => {
-  if(typeof privateKey === 'string' || Buffer.isBuffer(privateKey)) {
-    var key = new rsa(privateKey);
-  } else {
-    var key = privateKey;
-  }
-  if(key.isPrivate()) {
-    return key.sign(Buffer.from(data,'utf8')).toString('hex');
-  } else {
-    throw('Cannot sign with a public key');
-  }
-}
+  var key = stringToKey(privateKey);
+  // if(key.isPrivate()) {
+    var sig = new r.Signature({ "alg": sign_algo });
+    sig.init({ d: key.getPrivateKey('hex'), curve: curve });
+    sig.updateString(data);
+    return sig.sign();
+  // } else {
+  //   throw('Cannot sign with a public key');
+  // }
+};
 
 // verfy signed data with the public key
-const verify = (publicKey, data, signature) => {
-  if(typeof privateKey === 'string' || Buffer.isBuffer(privateKey)) {
-    var key = getPublicKey(publicKey, false);
-  } else {
-    var key = publicKey;
+// const verify = (publicKey, data, signature) => {
+//   var key = stringToKey(publicKey);
+//   return key.verify(data,Buffer.from(signature,'hex'));
+// };
+
+const verify = (publicKeyText, data, signature) => {
+  var sig = new r.Signature({ "alg": sign_algo });
+  sig.init({ xy: publicKeyText, curve: curve });
+  sig.updateString(data);
+  return sig.verify(signature);
+};
+
+const transactionToString = (sender, recipient, amount = 0.0, data = null, signature = null) => {
+  amount = Number.parseFloat(amount).toFixed(decimalPlaces);
+  var data = {
+    sender: sender,
+    recipient: recipient,
+    amount: amount,
+    data: data
+  };
+  if(signature) {
+    data.signature = signature;
   }
-  return key.verify(data,Buffer.from(signature,'hex'));
+  return JSON.stringify(data);
 }
 
-// use the first line of the public key as the address for this key pair
+const signTransaction = (privateKey, recipient, amount = 0.0, data = null) => {
+  var key = stringToKey(privateKey);
+  var txn_str = transactionToString(getAddress(key), recipient, amount, data);
+  return sign(privateKey, txn_str);
+}
+
 const getAddress = (key) => {
   if(typeof key !== 'string') {
-    key = key.exportKey('public');
+    key = getPublicKey(key, true);
   }
-  var publicArr = key.split('\n');
-  return publicArr[1];
+  //var publicArr = key.split('\n');
+  //return publicArr[2].toString('hex');
+  return key;
+};
+
+const saveKeys = (privateKey) => {
+  var key = stringToKey(privateKey);
+  var address = getAddress(key);
+
+  var file_prefix = address;
+  if(!fs.existsSync(`${keystore}/default.private.key`)) {
+    file_prefix = 'default';
+  }
+
+  fs.writeFile(`${keystore}/${file_prefix}.private.key`,key.getPrivateKey('hex'), (err) => {
+    if (err) throw err;
+  });
+
+  fs.writeFile(`${keystore}/${file_prefix}.public.key`,key.getPublicKey('hex'), (err) => {
+    if (err) throw err;
+  });
+
+};
+
+const loadKey = (address = 'default', type = 'private', returnText = false) => {
+  var filename = `${keystore}/${address}.${type}.key`;
+  if(fs.existsSync(filename)) {
+    var keyText = fs.readFileSync(filename,'utf8');
+    if(returnText) {
+      return keyText;
+    }
+    return stringToKey(keyText);
+  } else if(address === 'default') {
+    var key = createPrivateKey();
+    saveKeys(key);
+    if(returnText) {
+      return getPrivateKeyText(key);
+    }
+    return key;
+  } else {
+    throw('No keystore found for that address');
+  }
 };
 
 module.exports = {
   hash,
-  hash_block,
+  stringToKey,
   createPrivateKey,
   createPrivateKeyAsync,
+  getPrivateKeyText,
   getPublicKey,
   sign,
   verify,
-  getAddress
+  transactionToString,
+  signTransaction,
+  getAddress,
+  saveKeys,
+  loadKey
 }

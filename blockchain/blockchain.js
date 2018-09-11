@@ -1,10 +1,11 @@
 'use strict';
 const crypto = require('crypto');
 
-const {hash} = require('./utils');
+const utils = require('./utils');
 
 const blockVersion = 0.1;
 const difficulty = 3;
+const decimalPlaces = 5;
 
 class Blockchain {
   constructor() {
@@ -12,7 +13,7 @@ class Blockchain {
     this.chain = [];
     this.currentTransactions = [];
     this.hashPrefix = ''.padStart(difficulty,'0');
-    this.new_block(100,1);
+    this.newBlock(100,1);
   }
 
   get lastBlock() {
@@ -23,12 +24,12 @@ class Blockchain {
     return this.chain.length;
   }
 
-  new_block(proof, previous_hash) {
+  newBlock(proof, previous_hash) {
     var block = {
       index:          this.chain.length,
       transactions:   this.currentTransactions,
       proof:          proof,
-      previous_hash:  previous_hash || hash(this.chain[-1])
+      previous_hash:  previous_hash || utils.hash(this.chain[-1])
     };
     this.chain.push(block);
 
@@ -37,31 +38,36 @@ class Blockchain {
     return block;
   }
 
-  new_transaction(sender, recipient, amount, data = null, signature = null) {
-    var transaction = {
-      sender: sender,
-      recipient: recipient,
-      amount: amoumnt,
-      data: data,
-      signature: signature
-    };
-    this.currentTransactions.push(transaction);
+  newTransaction(senderKey, recipient, amount = 0.0, data = null, signature) {
+    var txn_str = utils.transactionToString(senderKey, recipient, amount, data);
+    if(utils.verify(senderKey, txn_str, signature)) {
+      var transaction = {
+        sender: senderKey,
+        recipient: recipient,
+        amount: amount,
+        data: data,
+        signature: signature
+      };
+      this.currentTransactions.push(transaction);
+    } else {
+      throw('Signature invalid');
+    }
 
     return transaction;
   }
 
-  valid_proof(proof,last_hash) {
+  validProof(proof,last_hash) {
     guess = `${proof}${last_hash}`;
-    guess_hash = hash_block(guess);
+    guess_hash = utils.hash(guess);
     return guess_hash.substring(0,difficulty) === hash_prefix;
   }
 
-  proof_of_work(last_block) {
+  proofOfWork(last_block) {
     last_proof = last_block['proof'];
-    last_hash = hash(last_block);
+    last_hash = hash(JSON.stringify(last_block));
 
     proof = 0;
-    while (!valid_proof(proof,last_hash))
+    while (!validProof(proof,last_hash))
       proof += 1;
 
     return proof;
@@ -69,5 +75,7 @@ class Blockchain {
 }
 
 module.exports = {
+  blockVersion,
+  decimalPlaces,
   Blockchain
 }
