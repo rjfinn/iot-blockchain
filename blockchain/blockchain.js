@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const utils = require('./utils');
 
 const blockVersion = 0.1;
-const difficulty = 3;
+const difficulty = 4;
 const decimalPlaces = 5;
 
 class Blockchain {
@@ -57,20 +57,30 @@ class Blockchain {
   }
 
   validProof(proof,last_hash) {
-    guess = `${proof}${last_hash}`;
-    guess_hash = utils.hash(guess);
-    return guess_hash.substring(0,difficulty) === hash_prefix;
+    var guess = `${proof}${last_hash}`;
+    var guess_hash = utils.hash(guess);
+    return guess_hash.substring(0,difficulty) === this.hashPrefix;
   }
 
   proofOfWork(last_block) {
-    last_proof = last_block['proof'];
-    last_hash = hash(JSON.stringify(last_block));
+    var last_proof = this.lastBlock['proof'];
+    var last_hash = utils.hash(JSON.stringify(last_block));
 
-    proof = 0;
-    while (!validProof(proof,last_hash))
+    var proof = 0;
+    while (!this.validProof(proof,last_hash))
       proof += 1;
 
     return proof;
+  }
+
+  async mine() {
+    var last_block = this.lastBlock
+    var proof = await this.proofOfWork(last_block)
+
+    // Forge the new Block by adding it to the chain
+    var previous_hash = utils.hash(JSON.stringify(last_block))
+    var block = this.newBlock(proof, previous_hash)
+    return block;
   }
 }
 

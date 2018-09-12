@@ -100,6 +100,13 @@ describe('Create a blockchain', () => {
     expect(last_transaction).toEqual(txn);
   });
 
+  it('should include the transaction when mining a new block', async () => {
+    var block = await bc.mine();
+    expect(bc.currentTransactions.length).toBe(0);
+    expect(bc.lastBlock.transactions.length).toBeGreaterThan(0);
+    expect(bc.chain.length).toBeGreaterThan(1);
+  });
+
 });
 
 // describe('Create a transaction', () => {
