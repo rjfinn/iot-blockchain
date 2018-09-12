@@ -40,7 +40,7 @@ class Blockchain {
 
   newTransaction(senderKey, recipient, amount = 0.0, data = null, signature) {
     var txn_str = utils.transactionToString(senderKey, recipient, amount, data);
-    if(utils.verify(senderKey, txn_str, signature)) {
+    if(utils.verifySign(senderKey, txn_str, signature)) {
       var transaction = {
         sender: senderKey,
         recipient: recipient,
@@ -73,14 +73,18 @@ class Blockchain {
     return proof;
   }
 
-  async mine() {
+  async mine(callback = null) {
     var last_block = this.lastBlock
     var proof = await this.proofOfWork(last_block)
 
     // Forge the new Block by adding it to the chain
     var previous_hash = utils.hash(JSON.stringify(last_block))
     var block = this.newBlock(proof, previous_hash)
-    return block;
+    if(callback) {
+      callback(block, null);
+    } else {
+      return block;
+    }
   }
 }
 

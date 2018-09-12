@@ -45,10 +45,22 @@ const createPrivateKey = (returnText = false) => {
 
 const getPrivateKeyText = (privateKey) => {
   return privateKey.getPrivateKey('hex');
-}
+};
 
-const createPrivateKeyAsync = async (returnText = false) => {
-  return Promise.resolve(createPrivateKey(returnText));
+const createPrivateKeyAsync = async (returnText = false, callback = null) => {
+  //return Promise.resolve(createPrivateKey(returnText));
+  var key = null;
+  var err = null;
+  try {
+    key = await createPrivateKey(returnText);
+  } catch(e) {
+    err = e;
+  }
+  if(callback) {
+    callback(key, err);
+  } else {
+    return key;
+  }
 };
 
 const getPublicKey = (privateKey, returnText = true) => {
@@ -90,17 +102,47 @@ const sign = (privateKey, data) => {
   // }
 };
 
+const signAsync = async (privateKey, data, callback) => {
+  var err = null;
+  var signature = null;
+  try {
+    signature = await sign(privateKey, data);
+  } catch(e) {
+    err = e;
+  }
+  if(callback) {
+    callback(signature, err);
+  } else {
+    return signature;
+  }
+};
+
 // verfy signed data with the public key
 // const verify = (publicKey, data, signature) => {
 //   var key = stringToKey(publicKey);
 //   return key.verify(data,Buffer.from(signature,'hex'));
 // };
 
-const verify = (publicKeyText, data, signature) => {
+const verifySign = (publicKeyText, data, signature) => {
   var sig = new r.Signature({ "alg": sign_algo });
   sig.init({ xy: publicKeyText, curve: curve });
   sig.updateString(data);
   return sig.verify(signature);
+};
+
+const verifySignAsync = async (publicKeyText, data, signature, callback = null) => {
+  var err = null;
+  var verify = null;
+  try {
+    verify = await verifySign(publicKeyText, data, signature);
+  } catch(e) {
+    err = e;
+  }
+  if(callback) {
+    callback(verify, err);
+  } else {
+    return verify;
+  }
 };
 
 const transactionToString = (sender, recipient, amount = 0.0, data = null, signature = null) => {
@@ -115,13 +157,28 @@ const transactionToString = (sender, recipient, amount = 0.0, data = null, signa
     data.signature = signature;
   }
   return JSON.stringify(data);
-}
+};
 
 const signTransaction = (privateKey, recipient, amount = 0.0, data = null) => {
   var key = stringToKey(privateKey);
   var txn_str = transactionToString(getAddress(key), recipient, amount, data);
   return sign(privateKey, txn_str);
-}
+};
+
+const signTransactionAsync = async (privateKey, recipient, amount = 0.0, data = null, callback = null) => {
+  var sign;
+  var err;
+  try {
+    sign = await signTransaction(privateKey, recipient, amount, data);
+  } catch(e) {
+    err = e;
+  }
+  if(callback) {
+    callback(sign, err);
+  } else {
+    return sign;
+  }
+};
 
 const getAddress = (key) => {
   if(typeof key !== 'string') {
@@ -179,10 +236,13 @@ module.exports = {
   getPrivateKeyText,
   getPublicKey,
   sign,
-  verify,
+  signAsync,
+  verifySign,
+  verifySignAsync,
   transactionToString,
+  signTransaction,
   signTransaction,
   getAddress,
   saveKeys,
   loadKey
-}
+};

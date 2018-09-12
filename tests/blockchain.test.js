@@ -27,26 +27,37 @@ describe('Cryotography utils', () => {
     expect(utils.hash(testText)).toBe(hash);
   });
 
-  // it('should create a private key', async (done) => {
-  //   var key = await utils.createPrivateKeyAsync();
-  //   expect(key).toBeDefined();
-  //   expect(key).not.toBeNull();
-  //   expect(key.constructor.name).toBe('NodeRSA');
-  //   done();
-  // });
-  it('should create a private key', () => {
-    //expect(key.constructor.name).toBe('NodeRSA');
-    expect(key.getPrivateKey).toBeDefined();
+  it('should create a private key', (done) => {
+    utils.createPrivateKeyAsync(false, (key, err) => {
+      if(err) {
+        done(err);
+      } else {
+        expect(key).toBeDefined();
+        expect(key).not.toBeNull();
+        expect(key.getPrivateKey).toBeDefined();
+        done();
+      }
+    });
   });
+
+  // it('should create a private key', () => {
+  //   expect(key.getPrivateKey).toBeDefined();
+  // });
 
   it('should export a public key', () => {
     expect(typeof publicKey).toBe('string');
   });
 
-  it('should sign a piece of data', () => {
+  it('should sign a piece of data', (done) => {
     expect(typeof sign).toBe('string');
-    var verify = utils.verify(publicKey, testText, sign);
-    expect(verify).toBe(true);
+    utils.verifySignAsync(publicKey, testText, sign, (verify, err) => {
+      if(err) {
+        done(err);
+      } else {
+        expect(verify).toBe(true);
+        done();
+      }
+    });
   });
 
   it('should import a key from text', () => {
@@ -55,10 +66,21 @@ describe('Cryotography utils', () => {
     //expect(utils.sign(key2,data)).toBe(sign);
   });
 
-  it('should consistently sign data', () => {
-    var sign2 = utils.sign(key2, testText);
-    var verify = utils.verify(publicKey, testText, sign2);
-    expect(verify).toBe(true);
+  it('should consistently sign data', (done) => {
+    utils.signAsync(key2, testText, (sign2, err) => {
+      if(err) {
+        done(err);
+      } else {
+        utils.verifySignAsync(publicKey, testText, sign2, (verify, err) => {
+          if(err) {
+            done(err);
+          } else {
+            expect(verify).toBe(true);
+            done();
+          }
+        });
+      }
+    });
   });
 
 
@@ -66,14 +88,20 @@ describe('Cryotography utils', () => {
     expect(loadedKey.getPrivateKey).toBeDefined();
   });
 
-  it('should sign a transaction and return a string signature', () => {
+  it('should sign a transaction and return a string signature', (done) => {
     expect(typeof txn.signature).toBe('string');
     var sender = utils.getPublicKey(loadedKey);
     var txn_str = utils.transactionToString(sender, txn.recipient, txn.amount, txn.data);
     expect(typeof txn_str).toBe('string');
     //var txn_sign = utils.sign(loadedKey, txn_str);
-    var verify = utils.verify(sender, txn_str, txn.signature);
-    expect(verify).toBe(true);
+    utils.verifySignAsync(sender, txn_str, txn.signature, (verify, err) => {
+      if(err) {
+        done(err);
+      } else {
+        expect(verify).toBe(true);
+        done();
+      }
+    });
   });
 });
 
@@ -88,8 +116,11 @@ describe('Create a blockchain', () => {
     expect(bc.lastBlock.transactions.length).toBe(0);
   });
 
-  it('should create a new transaction', () => {
-    var block_txn = bc.newTransaction(txn.sender, txn.recipient, txn.amount, txn.data, txn.signature);
+});
+
+describe('Create transactions', () => {
+  it('should create a new transaction', async () => {
+    var block_txn = await bc.newTransaction(txn.sender, txn.recipient, txn.amount, txn.data, txn.signature);
     expect(block_txn.sender).toBe(txn.sender);
     expect(block_txn.amount).toEqual(txn.amount);
   });
@@ -100,11 +131,15 @@ describe('Create a blockchain', () => {
     expect(last_transaction).toEqual(txn);
   });
 
-  it('should include the transaction when mining a new block', async () => {
-    var block = await bc.mine();
-    expect(bc.currentTransactions.length).toBe(0);
-    expect(bc.lastBlock.transactions.length).toBeGreaterThan(0);
-    expect(bc.chain.length).toBeGreaterThan(1);
+  it('should include the transaction when mining a new block', (done) => {
+    bc.mine((block, err) => {
+      if(err) done(err);
+      expect(bc.currentTransactions.length).toBe(0);
+      expect(bc.lastBlock).toEqual(block);
+      expect(bc.lastBlock.transactions.length).toBeGreaterThan(0);
+      expect(bc.chain.length).toBeGreaterThan(1);
+      done();
+    });
   });
 
 });
