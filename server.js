@@ -48,6 +48,10 @@ app.post('/nodes/register', (req, res) => {
     }
 });
 
+app.get('/nodes', (req, res) => {
+  res.status(200).send(nodes);
+});
+
 app.get('/transactions/current', (req, res) => {
   res.status(200).send({
     transactions: bc.currentTransactions,
@@ -64,16 +68,25 @@ app.get('/transactions/:id', (req, res) => {
   }
 });
 
-app.post('/transaction', (req, res) => {
+app.post('/transactions', (req, res) => {
   try {
-    var amount = "amount" in req.body ? req.body.amount : 0.0;
-    var data = "data" in req.body ? req.body.data : null;
-    var txn = bc.newTransaction(
-      req.body.publicKey,
-      req.body.recipient,
-      amount, data,
-      req.body.signature);
-    res.status(201).send(txn);
+    var txn;
+    if("id" in req.body) {
+      txn = bc.currentTransactionExists(req.body.id);
+    }
+    if(txn !== undefined) {
+      var amount = "amount" in req.body ? req.body.amount : 0.0;
+      var data = "data" in req.body ? req.body.data : null;
+      txn = bc.newTransaction(
+        req.body.publicKey,
+        req.body.recipient,
+        amount, data,
+        req.body.signature);
+      res.status(201);
+    } else {
+      res.status(200);
+    }
+    res.send(txn);
   } catch(e) {
     res.status(400).send({error: e});
   }
@@ -92,7 +105,9 @@ var server = app.listen(port, () => {
   console.log(`Started at ${url.address}:${url.port}`);
 });
 
-// var key = utils.createPrivateKey(true);
-// console.log(key)
+/* TODO:
+ * automatic function to check for minable transactions and auto-mine
+ * automatic function to check nodes for health and remove
+ */
 
 module.exports = {app};

@@ -90,14 +90,23 @@ class Blockchain {
     var txn;
     this.chain.some((block) => {
       if(block.transactions !== undefined) {
-        txn = block.transactions.find((elem) => {
-          return elem.id == txn_id;
-        });
+        txn = block.transactions.find((elem) => elem.id === txn_id);
       }
       if(txn !== undefined) return true;
       else return false;
     });
     return txn;
+  }
+
+  currentTransactionExists(txn_id) {
+    return this.currentTransactions.some((txn) => {
+      if(txn.id === txn_id) return true;
+      else return false;
+    });
+  }
+
+  currentTransactionById(txn_id) {
+    return this.currentTransactions.find((txn) => txn.id === txn_id);
   }
 
   /* newTransaction
@@ -111,22 +120,24 @@ class Blockchain {
     var sender_addr = utils.getAddress(publicKey);
     var txn_str = utils.transactionToString(sender_addr, recipient, amount, data);
     var txn_id = utils.hash(txn_str);
-    if(utils.verifySign(publicKey, txn_str, signature)) {
-      var transaction = {
-        sender:     sender_addr,
-        recipient:  recipient,
-        amount:     amount,
-        data:       data,
-        timestamp:  utils.timestamp(),
-        publicKey:  publicKey,
-        signature:  signature,
-        id:         txn_id
-      };
-      this.currentTransactions.push(transaction);
-    } else {
-      throw('Signature invalid');
+    var transaction = this.currentTransactionById(txn_id);
+    if(!transaction) {
+      if(utils.verifySign(publicKey, txn_str, signature)) {
+        transaction = {
+          sender:     sender_addr,
+          recipient:  recipient,
+          amount:     amount,
+          data:       data,
+          timestamp:  utils.timestamp(),
+          publicKey:  publicKey,
+          signature:  signature,
+          id:         txn_id
+        };
+        this.currentTransactions.push(transaction);
+      } else {
+        throw('Signature invalid');
+      }
     }
-
     return transaction;
   }
 

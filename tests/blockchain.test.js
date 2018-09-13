@@ -142,6 +142,7 @@ describe('Create transactions', () => {
     txn.timestamp = last_transaction.timestamp;
     txn.id = last_transaction.id;
     expect(last_transaction).toEqual(txn);
+    expect(bc.currentTransactionExists(txn.id)).not.toBe(false);
   });
 
   it('should include the transaction when mining a new block', (done) => {
