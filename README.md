@@ -14,18 +14,18 @@ $ npm install --only=dev
 mocha tests/blockchain.tests.js
 ```
 
-The config.json file is used for the server, which isn't currently done.
+The config.json file is used for the server, but not committed to the repo, so you'll need to create one.
 ### sample config/config.json:
 ```json
 {
   "development": {
-    "PORT": 3001
+    "PORT": 5001
    },
    "test": {
-    "PORT": 3002
+    "PORT": 5002
    },
    "production": {
-    "PORT": 3000
+    "PORT": 5000
    }
 }
 ```
