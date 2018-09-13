@@ -151,4 +151,10 @@ describe('Create transactions', () => {
     });
   });
 
+  it('should find transactions by sender', async () => {
+    var transactions = await bc.getTransactionsBySender(txn.sender);
+    expect(transactions).toBeDefined();
+    expect(transactions.length).toBeGreaterThan(0);
+    expect(transactions[0].publicKey).toBe(loadedKeyPublic);
+  });
 });

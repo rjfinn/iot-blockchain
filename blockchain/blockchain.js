@@ -60,22 +60,35 @@ class Blockchain {
     return theBlock;
   }
 
-  // will add a block to the chain, assumes valid proof
-  newBlock(proof, previous_hash) {
-    var block = {
-      index:          this.chain.length,
-      transactions:   this.currentTransactions,
-      proof:          proof,
-      previous_hash:  previous_hash || utils.hash(this.chain[-1]),
-      timestamp:      utils.timestamp()
-    };
-    this.chain.push(block);
-
-    this.currentTransactions = [];
-
-    return block;
+  getTransactionsBySenderAndBlock(sender, block) {
+    var blockObj;
+    if(typeof block === 'number' || typeof block === 'string') {
+      blockObj = this.getBlock(block);
+    } else {
+      blockObj = block;
+    }
+    var transactions = blockObj.transactions.filter((txn) => txn.sender === sender);
+    return transactions;
   }
 
+  getTransactionsBySender(sender, blocks = null) {
+    if(!Array.isArray(blocks)) {
+      blocks = this.chain;
+    }
+    var transactions = new Array();
+    blocks.forEach((elem) => {
+      transactions = transactions.concat(this.getTransactionsBySenderAndBlock(sender,elem));
+    });
+    return transactions;
+  }
+
+  /* newTransaction
+   * publicKey = public key (text) of the sender, the address is derived from that
+   * recepient = the receiving address
+   * amount (optional) = amount of "token" to be sent TODO: account for it
+   * data (optional) = JSON object to include in transaction, could be a command
+   * signature = signature of sender, recepient, amount, data (see utils.signTransaction)
+   */
   newTransaction(publicKey, recipient, amount = 0.0, data = null, signature) {
     var sender_addr = utils.getAddress(publicKey);
     var txn_str = utils.transactionToString(sender_addr, recipient, amount, data);
@@ -114,6 +127,26 @@ class Blockchain {
     return proof;
   }
 
+  // will add a block to the chain, assumes valid proof (see mine())
+  newBlock(proof, previous_hash) {
+    var block = {
+      index:          this.chain.length,
+      transactions:   this.currentTransactions,
+      proof:          proof,
+      previous_hash:  previous_hash || utils.hash(this.chain[-1]),
+      timestamp:      utils.timestamp()
+    };
+    this.chain.push(block);
+
+    this.currentTransactions = [];
+
+    return block;
+  }
+
+  /* mine a new block
+   * will find a proof number that results in a hash that passes
+   * the difficulty criteria, then add the block to the chain
+   */
   async mine(callback = null) {
     var last_block = this.lastBlock
     var proof = await this.proofOfWork(last_block)
@@ -131,6 +164,7 @@ class Blockchain {
 
 module.exports = {
   blockVersion,
+  difficulty,
   decimalPlaces,
   Blockchain
 }
