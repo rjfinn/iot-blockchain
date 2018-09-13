@@ -1,5 +1,4 @@
 const expect = require('expect');
-const rsa = require('node-rsa');
 
 const {Blockchain} = require('./../blockchain/blockchain');
 const utils = require('./../blockchain/utils');
@@ -13,8 +12,9 @@ var sign = utils.sign(key, testText);
 var keyText = utils.getPrivateKeyText(key);
 var key2 = utils.stringToKey(keyText);
 var loadedKey = utils.loadKey('default');
+var loadedKeyPublic = utils.getPublicKey(loadedKey);
 var txn = {
-  sender: utils.getPublicKey(loadedKey),
+  sender: utils.getAddress(loadedKeyPublic),
   recipient: publicKey,
   amount: 1.0,
   data: 'device command tango'
@@ -26,7 +26,9 @@ describe('Cryotography utils', () => {
     var hash = "2e99758548972a8e8822ad47fa1017ff72f06f3ff6a016851f45c398732bc50c";
     expect(utils.hash(testText)).toBe(hash);
   });
+});
 
+describe('Cryptography utils: keys', () => {
   it('should create a private key', (done) => {
     utils.createPrivateKeyAsync(false, (key, err) => {
       if(err) {
@@ -40,14 +42,28 @@ describe('Cryotography utils', () => {
     });
   });
 
-  // it('should create a private key', () => {
-  //   expect(key.getPrivateKey).toBeDefined();
-  // });
-
   it('should export a public key', () => {
     expect(typeof publicKey).toBe('string');
   });
 
+  it('should generate an address from a key', () => {
+    var addr = utils.getAddress(publicKey);
+    expect(typeof addr).toBe('string');
+    expect(addr).toHaveLength(40);
+  });
+
+  it('should import a key from text', () => {
+    expect(key2.getPrivateKey).toBeDefined();
+    expect(utils.getPrivateKeyText(key2)).toBe(keyText);
+    //expect(utils.sign(key2,data)).toBe(sign);
+  });
+
+  it('should load a keystore from the filesystem', () => {
+    expect(loadedKey.getPrivateKey).toBeDefined();
+  });
+});
+
+describe('Cryptography utils: signing', () => {
   it('should sign a piece of data', (done) => {
     expect(typeof sign).toBe('string');
     utils.verifySignAsync(publicKey, testText, sign, (verify, err) => {
@@ -58,12 +74,6 @@ describe('Cryotography utils', () => {
         done();
       }
     });
-  });
-
-  it('should import a key from text', () => {
-    expect(key2.getPrivateKey).toBeDefined();
-    expect(utils.getPrivateKeyText(key2)).toBe(keyText);
-    //expect(utils.sign(key2,data)).toBe(sign);
   });
 
   it('should consistently sign data', (done) => {
@@ -83,18 +93,14 @@ describe('Cryotography utils', () => {
     });
   });
 
-
-  it('should load a keystore from the filesystem', () => {
-    expect(loadedKey.getPrivateKey).toBeDefined();
-  });
-
   it('should sign a transaction and return a string signature', (done) => {
     expect(typeof txn.signature).toBe('string');
-    var sender = utils.getPublicKey(loadedKey);
-    var txn_str = utils.transactionToString(sender, txn.recipient, txn.amount, txn.data);
+    var sender_pub = utils.getPublicKey(loadedKey);
+    var sender_addr = utils.getAddress(sender_pub);
+    var txn_str = utils.transactionToString(sender_addr, txn.recipient, txn.amount, txn.data);
     expect(typeof txn_str).toBe('string');
     //var txn_sign = utils.sign(loadedKey, txn_str);
-    utils.verifySignAsync(sender, txn_str, txn.signature, (verify, err) => {
+    utils.verifySignAsync(sender_pub, txn_str, txn.signature, (verify, err) => {
       if(err) {
         done(err);
       } else {
@@ -120,14 +126,17 @@ describe('Create a blockchain', () => {
 
 describe('Create transactions', () => {
   it('should create a new transaction', async () => {
-    var block_txn = await bc.newTransaction(txn.sender, txn.recipient, txn.amount, txn.data, txn.signature);
+    var block_txn = await bc.newTransaction(loadedKeyPublic, txn.recipient, txn.amount, txn.data, txn.signature);
     expect(block_txn.sender).toBe(txn.sender);
-    expect(block_txn.amount).toEqual(txn.amount);
+    expect(block_txn.data).toEqual(txn.data);
   });
 
   it('should include the new transaction in the current transactions list', () => {
     var last_transaction = bc.currentTransactions.slice(-1)[0];
+    // raw transaction does not include public key or timestamp
+    txn.publicKey = loadedKeyPublic;
     expect(last_transaction).toBeDefined();
+    txn.timestamp = last_transaction.timestamp;
     expect(last_transaction).toEqual(txn);
   });
 
@@ -143,10 +152,3 @@ describe('Create transactions', () => {
   });
 
 });
-
-// describe('Create a transaction', () => {
-//   it('should add a new trasaction to list, but not yet into the block', () {
-//     var transaction = {
-//     };
-//   });
-// });

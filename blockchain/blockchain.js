@@ -24,12 +24,50 @@ class Blockchain {
     return this.chain.length;
   }
 
+  /* getBlocks by filters, all filters optional
+   * startTime = timestamp to start block range, in Unix epoch milliseconds
+   * endTime = timestamp to end block range
+   * startIndex = block index to start range
+   * endIndex = block index to end range
+   * limit = number of blocks to return
+   */
+  getBlocks(options) {
+    var startTime = "startTime" in options ? options.startTime : 0;
+    if(Number(startTime) === 'NaN') {
+      startTime = new Date(startTime).valueOf();
+    }
+    var endTime = "endTime" in options ? options.endTime : new Date().valueOf() + 100000;
+    if(Number(endTime) === 'NaN') {
+      endTime = new Date(endTime).valueOf();
+    }
+    var startIndex = "startIndex" in options ? options.startIndex : 0;
+    var endIndex = "endIndex" in options ? options.endIndex : this.lastBlock[index];
+    var limit = "limit" in options ? options.limit : this.length;
+    var count = 0;
+    var blocks = this.chain.filter((block) => {
+      count++;
+      return block.timestamp > startTime && block.timestamp < endTime &&
+            block.index > startIndex && block.index < endIndex
+            && count <= limit;
+    });
+  }
+
+  getBlock(index) {
+    var theBlock = this.chain[index];
+    if(theBlock.index !== index) {
+      theBlock = this.chain.filter((block) => block.index === index);
+    }
+    return theBlock;
+  }
+
+  // will add a block to the chain, assumes valid proof
   newBlock(proof, previous_hash) {
     var block = {
       index:          this.chain.length,
       transactions:   this.currentTransactions,
       proof:          proof,
-      previous_hash:  previous_hash || utils.hash(this.chain[-1])
+      previous_hash:  previous_hash || utils.hash(this.chain[-1]),
+      timestamp:      utils.timestamp()
     };
     this.chain.push(block);
 
@@ -38,15 +76,18 @@ class Blockchain {
     return block;
   }
 
-  newTransaction(senderKey, recipient, amount = 0.0, data = null, signature) {
-    var txn_str = utils.transactionToString(senderKey, recipient, amount, data);
-    if(utils.verifySign(senderKey, txn_str, signature)) {
+  newTransaction(publicKey, recipient, amount = 0.0, data = null, signature) {
+    var sender_addr = utils.getAddress(publicKey);
+    var txn_str = utils.transactionToString(sender_addr, recipient, amount, data);
+    if(utils.verifySign(publicKey, txn_str, signature)) {
       var transaction = {
-        sender: senderKey,
-        recipient: recipient,
-        amount: amount,
-        data: data,
-        signature: signature
+        sender:     sender_addr,
+        recipient:  recipient,
+        amount:     amount,
+        data:       data,
+        timestamp:  utils.timestamp(),
+        publicKey:  publicKey,
+        signature:  signature
       };
       this.currentTransactions.push(transaction);
     } else {

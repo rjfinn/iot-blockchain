@@ -2,36 +2,25 @@
 const r = require('jsrsasign');
 const ec = new r.ECDSA({ 'curve': 'secp256k1' });
 const crypto = require('crypto');
-//const rsa = require('node-rsa');
 const fs = require('fs');
 
 const keystore = './keystore';
 const hash_algo = 'sha256';
 const sign_algo = 'SHA256withECDSA';
+const addr_algo = 'ripemd160';
 const curve = 'secp256k1';
 const decimalPlaces = 5;
-// const bits = 2048;
 
-// const hash_block = (block) => {
-//   var block_string = JSON.stringify(block);
-//   return hash(block_string);
-// };
-
-const hash = (text) => {
-  return crypto.createHash(hash_algo)
+const hash = (text, algo = hash_algo) => {
+  return crypto.createHash(algo)
     .update(text)
     .digest('hex')
     .toString();
 };
 
-// const createPrivateKey = (returnText = false) => {
-//   var key = new rsa({b: bits});
-//   key.generateKeyPair();
-//   if(returnText) {
-//     return key.exportKey('private');
-//   }
-//   return key;
-// };
+const timestamp = () => {
+  return new Date(new Date().toUTCString()).valueOf();
+}
 
 const createPrivateKey = (returnText = false) => {
   const key = crypto.createECDH(curve);
@@ -48,7 +37,6 @@ const getPrivateKeyText = (privateKey) => {
 };
 
 const createPrivateKeyAsync = async (returnText = false, callback = null) => {
-  //return Promise.resolve(createPrivateKey(returnText));
   var key = null;
   var err = null;
   try {
@@ -73,33 +61,18 @@ const getPublicKey = (privateKey, returnText = true) => {
 
 const stringToKey = (key) => {
   if(typeof key === 'string' || Buffer.isBuffer(key)) {
-    //return new rsa(keyText);
     var privKey = crypto.createECDH(curve).setPrivateKey(key,'hex');
     return privKey;
   }
   return key;
 };
 
-// sign data with the private RSA key
-// const sign = (privateKey, data) => {
-//   var key = stringToKey(privateKey);
-//   if(key.isPrivate()) {
-//     return key.sign(Buffer.from(data,'utf8')).toString('hex');
-//   } else {
-//     throw('Cannot sign with a public key');
-//   }
-// };
-
 const sign = (privateKey, data) => {
   var key = stringToKey(privateKey);
-  // if(key.isPrivate()) {
-    var sig = new r.Signature({ "alg": sign_algo });
-    sig.init({ d: key.getPrivateKey('hex'), curve: curve });
-    sig.updateString(data);
-    return sig.sign();
-  // } else {
-  //   throw('Cannot sign with a public key');
-  // }
+  var sig = new r.Signature({ "alg": sign_algo });
+  sig.init({ d: key.getPrivateKey('hex'), curve: curve });
+  sig.updateString(data);
+  return sig.sign();
 };
 
 const signAsync = async (privateKey, data, callback) => {
@@ -116,12 +89,6 @@ const signAsync = async (privateKey, data, callback) => {
     return signature;
   }
 };
-
-// verfy signed data with the public key
-// const verify = (publicKey, data, signature) => {
-//   var key = stringToKey(publicKey);
-//   return key.verify(data,Buffer.from(signature,'hex'));
-// };
 
 const verifySign = (publicKeyText, data, signature) => {
   var sig = new r.Signature({ "alg": sign_algo });
@@ -180,13 +147,17 @@ const signTransactionAsync = async (privateKey, recipient, amount = 0.0, data = 
   }
 };
 
+const hashTransaction = (sender, recipient, amount = 0.0, data = null) => {
+  var hashed_txn = transactionToString(sender, recipient, amount, data);
+  return hash(hashed_txn);
+};
+
 const getAddress = (key) => {
   if(typeof key !== 'string') {
     key = getPublicKey(key, true);
   }
-  //var publicArr = key.split('\n');
-  //return publicArr[2].toString('hex');
-  return key;
+  var addr = hash(key, addr_algo);
+  return addr;
 };
 
 const saveKeys = (privateKey) => {
@@ -230,6 +201,7 @@ const loadKey = (address = 'default', type = 'private', returnText = false) => {
 
 module.exports = {
   hash,
+  timestamp,
   stringToKey,
   createPrivateKey,
   createPrivateKeyAsync,
@@ -242,6 +214,7 @@ module.exports = {
   transactionToString,
   signTransaction,
   signTransaction,
+  hashTransaction,
   getAddress,
   saveKeys,
   loadKey
