@@ -10,8 +10,8 @@ const decimalPlaces = 5;
 class Blockchain {
   constructor() {
     this.blockVersion = blockVersion;
-    this.chain = [];
-    this.currentTransactions = [];
+    this.chain = new Array();
+    this.currentTransactions = new Array();
     this.hashPrefix = ''.padStart(difficulty,'0');
     this.newBlock(100,1);
   }
@@ -23,6 +23,10 @@ class Blockchain {
   get length() {
     return this.chain.length;
   }
+
+  // get chain() {
+  //   return this.chain;
+  // }
 
   /* getBlocks by filters, all filters optional
    * startTime = timestamp to start block range, in Unix epoch milliseconds
@@ -92,6 +96,7 @@ class Blockchain {
   newTransaction(publicKey, recipient, amount = 0.0, data = null, signature) {
     var sender_addr = utils.getAddress(publicKey);
     var txn_str = utils.transactionToString(sender_addr, recipient, amount, data);
+    var txn_id = utils.hash(txn_str);
     if(utils.verifySign(publicKey, txn_str, signature)) {
       var transaction = {
         sender:     sender_addr,
@@ -100,7 +105,8 @@ class Blockchain {
         data:       data,
         timestamp:  utils.timestamp(),
         publicKey:  publicKey,
-        signature:  signature
+        signature:  signature,
+        id:         txn_id
       };
       this.currentTransactions.push(transaction);
     } else {
@@ -138,7 +144,7 @@ class Blockchain {
     };
     this.chain.push(block);
 
-    this.currentTransactions = [];
+    this.currentTransactions = new Array();
 
     return block;
   }

@@ -13,12 +13,14 @@ var keyText = utils.getPrivateKeyText(key);
 var key2 = utils.stringToKey(keyText);
 var loadedKey = utils.loadKey('default');
 var loadedKeyPublic = utils.getPublicKey(loadedKey);
+var loadedKeySender = utils.getAddress(loadedKeyPublic);
 var txn = {
-  sender: utils.getAddress(loadedKeyPublic),
+  sender: loadedKeySender,
   recipient: publicKey,
   amount: 1.0,
   data: 'device command tango'
 };
+var hashed_txn = utils.hashTransaction(loadedKeySender, txn.recipient, txn.amount, txn.data);
 txn.signature = utils.signTransaction(loadedKey, txn.recipient, txn.amount, txn.data);
 
 describe('Cryotography utils', () => {
@@ -129,14 +131,16 @@ describe('Create transactions', () => {
     var block_txn = await bc.newTransaction(loadedKeyPublic, txn.recipient, txn.amount, txn.data, txn.signature);
     expect(block_txn.sender).toBe(txn.sender);
     expect(block_txn.data).toEqual(txn.data);
+    expect(block_txn.id).toBe(hashed_txn);
   });
 
   it('should include the new transaction in the current transactions list', () => {
     var last_transaction = bc.currentTransactions.slice(-1)[0];
-    // raw transaction does not include public key or timestamp
+    // raw transaction does not include public key, timestamp, or id
     txn.publicKey = loadedKeyPublic;
     expect(last_transaction).toBeDefined();
     txn.timestamp = last_transaction.timestamp;
+    txn.id = last_transaction.id;
     expect(last_transaction).toEqual(txn);
   });
 
