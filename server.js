@@ -55,6 +55,15 @@ app.get('/transactions/current', (req, res) => {
   })
 });
 
+app.get('/transactions/:id', (req, res) => {
+  try {
+    var txn = bc.getTransactionById(req.params.id);
+    res.status(200).send(txn);
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
 app.post('/transaction', (req, res) => {
   try {
     var amount = "amount" in req.body ? req.body.amount : 0.0;

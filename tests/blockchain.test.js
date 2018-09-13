@@ -155,6 +155,12 @@ describe('Create transactions', () => {
     });
   });
 
+  it('should find a transaction by id', () => {
+    var source_txn = bc.lastBlock.transactions[0];
+    var found_txn = bc.getTransactionById(source_txn.id);
+    expect(found_txn).toEqual(source_txn);
+  });
+
   it('should find transactions by sender', async () => {
     var transactions = await bc.getTransactionsBySender(txn.sender);
     expect(transactions).toBeDefined();

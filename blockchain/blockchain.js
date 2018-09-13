@@ -86,6 +86,20 @@ class Blockchain {
     return transactions;
   }
 
+  getTransactionById(txn_id) {
+    var txn;
+    this.chain.some((block) => {
+      if(block.transactions !== undefined) {
+        txn = block.transactions.find((elem) => {
+          return elem.id == txn_id;
+        });
+      }
+      if(txn !== undefined) return true;
+      else return false;
+    });
+    return txn;
+  }
+
   /* newTransaction
    * publicKey = public key (text) of the sender, the address is derived from that
    * recepient = the receiving address
