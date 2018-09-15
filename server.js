@@ -15,7 +15,6 @@ var app = express();
 app.use(bodyParser.json());
 
 var bc = new Blockchain();
-var nodes = new Array();
 
 app.get('/chain', (req, res) => {
   res.send({
@@ -30,7 +29,7 @@ app.post('/nodes/register', (req, res) => {
       if(req.body.nodes !== undefined) {
         req.body.nodes.forEach((node) => {
           var nodeURL = new URL(node);
-          nodes.push({
+          bc.nodes.push({
             protocol: nodeURL.protocol,
             hostname: nodeURL.hostname,
             port:     nodeURL.port
@@ -49,7 +48,7 @@ app.post('/nodes/register', (req, res) => {
 });
 
 app.get('/nodes', (req, res) => {
-  res.status(200).send(nodes);
+  res.status(200).send(bc.nodes);
 });
 
 app.get('/transactions/current', (req, res) => {
@@ -73,20 +72,57 @@ app.post('/transactions', (req, res) => {
     var txn;
     if("id" in req.body) {
       txn = bc.currentTransactionExists(req.body.id);
+      if(txn !== undefined) {
+        txn.mined = false;
+      } else {
+        txn = bc.getTransactionById(req.body.id);
+        if(txn !== undefined) {
+          txn.mined = true;
+        }
+      }
     }
     if(txn !== undefined) {
       var amount = "amount" in req.body ? req.body.amount : 0.0;
       var data = "data" in req.body ? req.body.data : null;
       txn = bc.newTransaction(
         req.body.publicKey,
+        req.body.nonce,
         req.body.recipient,
         amount, data,
         req.body.signature);
+      if(txn !== undefined) {
+        txn.mined = false;
+      } else {
+        throw('Transaction could not be created.');
+      }
       res.status(201);
     } else {
       res.status(200);
     }
     res.send(txn);
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
+app.get('/blocks/:index', (req, res) {
+  try {
+    var block = bc.getBlock(req.params.index);
+    if(block !== undefined) {
+      res.status(200).send(block);
+    } else {
+      thorw('Could not find a block at that index.');
+    }
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
+app.post('/blocks', (req, res) => {
+  try {
+    // check validity of block, if only one block behind and valid add
+    // if more than 1 block behind, request missing blocks from originating host
+    //  valididate those blocks
   } catch(e) {
     res.status(400).send({error: e});
   }

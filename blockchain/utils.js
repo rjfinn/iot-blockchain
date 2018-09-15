@@ -112,10 +112,11 @@ const verifySignAsync = async (publicKeyText, data, signature, callback = null) 
   }
 };
 
-const transactionToString = (sender, recipient, amount = 0.0, data = null, signature = null) => {
+const transactionToString = (sender, nonce, recipient, amount = 0.0, data = null, signature = null) => {
   amount = Number.parseFloat(amount).toFixed(decimalPlaces);
   var data = {
     sender: sender,
+    nonce: nonce,
     recipient: recipient,
     amount: amount,
     data: data
@@ -126,17 +127,17 @@ const transactionToString = (sender, recipient, amount = 0.0, data = null, signa
   return JSON.stringify(data);
 };
 
-const signTransaction = (privateKey, recipient, amount = 0.0, data = null) => {
+const signTransaction = (privateKey, nonce, recipient, amount = 0.0, data = null) => {
   var key = stringToKey(privateKey);
-  var txn_str = transactionToString(getAddress(key), recipient, amount, data);
+  var txn_str = transactionToString(getAddress(key), nonce, recipient, amount, data);
   return sign(privateKey, txn_str);
 };
 
-const signTransactionAsync = async (privateKey, recipient, amount = 0.0, data = null, callback = null) => {
+const signTransactionAsync = async (privateKey, nonce, recipient, amount = 0.0, data = null, callback = null) => {
   var sign;
   var err;
   try {
-    sign = await signTransaction(privateKey, recipient, amount, data);
+    sign = await signTransaction(privateKey, nonce, recipient, amount, data);
   } catch(e) {
     err = e;
   }
@@ -147,7 +148,7 @@ const signTransactionAsync = async (privateKey, recipient, amount = 0.0, data = 
   }
 };
 
-const hashTransaction = (sender, recipient, amount = 0.0, data = null) => {
+const hashTransaction = (sender, nonce, recipient, amount = 0.0, data = null) => {
   var hashed_txn = transactionToString(sender, recipient, amount, data);
   return hash(hashed_txn);
 };

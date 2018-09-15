@@ -9,6 +9,7 @@ const decimalPlaces = 5;
 
 class Blockchain {
   constructor() {
+    this.nodes = new Array();
     this.blockVersion = blockVersion;
     this.chain = new Array();
     this.currentTransactions = new Array();
@@ -88,7 +89,7 @@ class Blockchain {
 
   getTransactionById(txn_id) {
     var txn;
-    this.chain.some((block) => {
+    this.chain.reverse().some((block) => {
       if(block.transactions !== undefined) {
         txn = block.transactions.find((elem) => elem.id === txn_id);
       }
@@ -141,6 +142,12 @@ class Blockchain {
     return transaction;
   }
 
+  broadcastTransaction(transaction) {
+    this.nodes.forEach((node) => {
+      // post to node /transactions
+    });
+  }
+
   validProof(proof,last_hash) {
     var guess = `${proof}${last_hash}`;
     var guess_hash = utils.hash(guess);
@@ -172,6 +179,12 @@ class Blockchain {
     this.currentTransactions = new Array();
 
     return block;
+  }
+
+  broadcastBlock(block) {
+    this.nodes.forEach((node) => {
+      // post to block /blocks
+    });
   }
 
   /* mine a new block

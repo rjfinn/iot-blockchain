@@ -16,12 +16,13 @@ var loadedKeyPublic = utils.getPublicKey(loadedKey);
 var loadedKeySender = utils.getAddress(loadedKeyPublic);
 var txn = {
   sender: loadedKeySender,
+  nonce: 1,
   recipient: publicKey,
   amount: 1.0,
   data: 'device command tango'
 };
-var hashed_txn = utils.hashTransaction(loadedKeySender, txn.recipient, txn.amount, txn.data);
-txn.signature = utils.signTransaction(loadedKey, txn.recipient, txn.amount, txn.data);
+var hashed_txn = utils.hashTransaction(loadedKeySender, txn.nonce, txn.recipient, txn.amount, txn.data);
+txn.signature = utils.signTransaction(loadedKey, txn.nonce, txn.recipient, txn.amount, txn.data);
 
 describe('Cryotography utils', () => {
   it('should create a valid SHA-256 hash', () => {
@@ -99,7 +100,7 @@ describe('Cryptography utils: signing', () => {
     expect(typeof txn.signature).toBe('string');
     var sender_pub = utils.getPublicKey(loadedKey);
     var sender_addr = utils.getAddress(sender_pub);
-    var txn_str = utils.transactionToString(sender_addr, txn.recipient, txn.amount, txn.data);
+    var txn_str = utils.transactionToString(sender_addr, txn.nonce, txn.recipient, txn.amount, txn.data);
     expect(typeof txn_str).toBe('string');
     //var txn_sign = utils.sign(loadedKey, txn_str);
     utils.verifySignAsync(sender_pub, txn_str, txn.signature, (verify, err) => {
@@ -128,7 +129,7 @@ describe('Create a blockchain', () => {
 
 describe('Create transactions', () => {
   it('should create a new transaction', async () => {
-    var block_txn = await bc.newTransaction(loadedKeyPublic, txn.recipient, txn.amount, txn.data, txn.signature);
+    var block_txn = await bc.newTransaction(loadedKeyPublic, txn.nonce, txn.recipient, txn.amount, txn.data, txn.signature);
     expect(block_txn.sender).toBe(txn.sender);
     expect(block_txn.data).toEqual(txn.data);
     expect(block_txn.id).toBe(hashed_txn);
