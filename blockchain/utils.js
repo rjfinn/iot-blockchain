@@ -148,9 +148,9 @@ const signTransactionAsync = async (privateKey, nonce, recipient, amount = 0.0, 
   }
 };
 
-const hashTransaction = (sender, nonce, recipient, amount = 0.0, data = null) => {
-  var hashed_txn = transactionToString(sender, recipient, amount, data);
-  return hash(hashed_txn);
+const hashTransaction = (sender_addr, nonce, recipient, amount = 0.0, data = null) => {
+  var txn_str = transactionToString(sender_addr, nonce, recipient, amount, data);
+  return hash(txn_str);
 };
 
 const getAddress = (key) => {

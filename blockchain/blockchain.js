@@ -117,15 +117,16 @@ class Blockchain {
    * data (optional) = JSON object to include in transaction, could be a command
    * signature = signature of sender, recepient, amount, data (see utils.signTransaction)
    */
-  newTransaction(publicKey, recipient, amount = 0.0, data = null, signature) {
+  newTransaction(publicKey, nonce, recipient, amount = 0.0, data = null, signature) {
     var sender_addr = utils.getAddress(publicKey);
-    var txn_str = utils.transactionToString(sender_addr, recipient, amount, data);
+    var txn_str = utils.transactionToString(sender_addr, nonce, recipient, amount, data);
     var txn_id = utils.hash(txn_str);
     var transaction = this.currentTransactionById(txn_id);
     if(!transaction) {
       if(utils.verifySign(publicKey, txn_str, signature)) {
         transaction = {
           sender:     sender_addr,
+          nonce:      nonce,
           recipient:  recipient,
           amount:     amount,
           data:       data,
