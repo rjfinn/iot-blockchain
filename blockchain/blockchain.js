@@ -80,9 +80,31 @@ class Blockchain {
     if(!Array.isArray(blocks)) {
       blocks = this.chain;
     }
-    var transactions = new Array();
+    var transactions = {};
     blocks.forEach((elem) => {
-      transactions = transactions.concat(this.getTransactionsBySenderAndBlock(sender,elem));
+      transactions[elem.index] = this.getTransactionsBySenderAndBlock(sender,elem);
+    });
+    return transactions;
+  }
+
+  getTransactionsByRecipientAndBlock(recepient, block) {
+    var blockObj;
+    if(typeof block === 'number' || typeof block === 'string') {
+      blockObj = this.getBlock(block);
+    } else {
+      blockObj = block;
+    }
+    var transactions = blockObj.transactions.filter((txn) => txn.recepient === recepient);
+    return transactions;
+  }
+
+  getTransactionsByRecipient(recepient, blocks = null) {
+    if(!Array.isArray(blocks)) {
+      blocks = this.chain;
+    }
+    var transactions = {};
+    blocks.forEach((elem) => {
+      transactions[elem.index] = this.getTransactionsByRecepientAndBlock(recepient,elem);
     });
     return transactions;
   }

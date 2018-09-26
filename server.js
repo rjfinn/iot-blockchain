@@ -70,6 +70,15 @@ app.get('/transactions/:id', (req, res) => {
   }
 });
 
+app.get('/transactions/recipient/:address', (req, res) => {
+  try {
+    var txn = bc.getTransactionsByRecipient(req.params.address);
+    res.status(200).send(txn);
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
 app.post('/transactions', (req, res) => {
   try {
     var txn;
