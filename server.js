@@ -81,7 +81,7 @@ app.post('/transactions', (req, res) => {
         }
       }
     }
-    if(txn !== undefined) {
+    if(txn === undefined) {
       var amount = "amount" in req.body ? req.body.amount : 0.0;
       var data = "data" in req.body ? req.body.data : null;
       txn = bc.newTransaction(
@@ -105,7 +105,7 @@ app.post('/transactions', (req, res) => {
   }
 });
 
-app.get('/blocks/:index', (req, res) {
+app.get('/blocks/:index', (req, res) => {
   try {
     var block = bc.getBlock(req.params.index);
     if(block !== undefined) {
@@ -121,16 +121,24 @@ app.get('/blocks/:index', (req, res) {
 app.post('/blocks', (req, res) => {
   try {
     // check validity of block, if only one block behind and valid add
-    // if more than 1 block behind, request missing blocks from originating host
+    // if behind, request missing blocks from originating host
     //  valididate those blocks
+    var block = req.body;
+    var last_block = bc.lastBlock;
+    if(block.index !== last_block.index)
+      var block_distance = block.index - last_block.index;
+      if(bc.validateBlock(block)) {
+        bc.addBlock(block);
+      }
+      // TODO: check for missing blocks
   } catch(e) {
     res.status(400).send({error: e});
   }
 });
 
 app.get('/mine', (req, res) => {
-  // var block = bc.mine();
-  // res.status(201).send(block);
+  //var block = bc.mine();
+  //res.status(201).send(block);
   bc.mine((block) => {
     res.status(201).send(block);
   })
@@ -145,5 +153,18 @@ var server = app.listen(port, () => {
  * automatic function to check for minable transactions and auto-mine
  * automatic function to check nodes for health and remove
  */
+
+function mine() {
+   console.log('automine check');
+   if(bc.currentTransactions.length > 0) {
+     console.log('...current transactions found, mining');
+     bc.mine((block) => {
+       console.log(`...${block.index}: ${block.transactions.length} transactions.`);
+     });
+   }
+   var waitTime = Math.floor(Math.random() * 20000) + 5000;  // TODO: make config vars
+   setTimeout(mine,waitTime);
+}
+setTimeout(mine,20000);
 
 module.exports = {app};

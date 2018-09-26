@@ -167,12 +167,12 @@ class Blockchain {
   }
 
   // will add a block to the chain, assumes valid proof (see mine())
-  newBlock(proof, previous_hash) {
+  newBlock(proof, previousHash) {
     var block = {
       index:          this.chain.length,
       transactions:   this.currentTransactions,
       proof:          proof,
-      previous_hash:  previous_hash || utils.hash(this.chain[-1]),
+      previousHash:   previousHash || utils.hash(this.chain[-1]),
       timestamp:      utils.timestamp()
     };
     this.chain.push(block);
@@ -180,6 +180,23 @@ class Blockchain {
     this.currentTransactions = new Array();
 
     return block;
+  }
+
+  addBlock(block) {
+    this.chain.push(block);
+  }
+
+  validateBlock(block) {
+    if(this.validProof(block.proof, block.previousHash)) {
+      block.transactions.forEach((txn) => {
+        var txn_str = utils.transactionToString(txn.sender, txn.nonce, txn.recipient, txn.amount, txn.data);
+        if(!utils.verifySign(txn.publicKey, txn_str, txn.signature)) {
+          return false;
+        }
+      });
+      return true;
+    }
+    return false;
   }
 
   broadcastBlock(block) {
@@ -197,8 +214,8 @@ class Blockchain {
     var proof = await this.proofOfWork(last_block)
 
     // Forge the new Block by adding it to the chain
-    var previous_hash = utils.hash(JSON.stringify(last_block))
-    var block = this.newBlock(proof, previous_hash)
+    var previousHash = utils.hash(JSON.stringify(last_block))
+    var block = this.newBlock(proof, previousHash)
     if(callback) {
       callback(block, null);
     } else {
