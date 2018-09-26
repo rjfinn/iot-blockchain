@@ -72,8 +72,17 @@ app.get('/transactions/:id', (req, res) => {
 
 app.get('/transactions/recipient/:address', (req, res) => {
   try {
-    var txn = bc.getTransactionsByRecipient(req.params.address);
-    res.status(200).send(txn);
+    var txns = bc.getTransactionsByRecipient(req.params.address);
+    res.status(200).send(txns);
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
+app.get('/transactions/recipient/:address/:index', (req, res) => {
+  try {
+    var txns = bc.getTransactionsByRecipientAfterBlock(req.params.address,req.params.index);
+    res.status(200).send(txns);
   } catch(e) {
     res.status(400).send({error: e});
   }

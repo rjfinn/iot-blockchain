@@ -109,6 +109,14 @@ class Blockchain {
     return transactions;
   }
 
+  getTransactionsByRecipientAfterBlock(recepient, block_index) {
+    var blocks = new Array();
+    for(var i = this.length; i > block_index; i--) {
+      blocks.push(i);
+    }
+    return this.getTransactionsByRecipient(recepient, blocks);
+  }
+
   getTransactionById(txn_id) {
     var txn;
     this.chain.reverse().some((block) => {

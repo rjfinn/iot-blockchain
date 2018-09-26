@@ -8,4 +8,6 @@ const utils = require('./blockchain/utils');
 
 var last_index = 0;
 
-function get
+function getRecentTransactions() {
+  
+}
