@@ -3,6 +3,7 @@ const r = require('jsrsasign');
 const ec = new r.ECDSA({ 'curve': 'secp256k1' });
 const crypto = require('crypto');
 const fs = require('fs');
+const os = require('os');
 
 const keystore = './keystore';
 const hash_algo = 'sha256';
@@ -10,6 +11,21 @@ const sign_algo = 'SHA256withECDSA';
 const addr_algo = 'ripemd160';
 const curve = 'secp256k1';
 const decimalPlaces = 5;
+
+const getMyAddress = (iface = null, family = 'IPv4') => {
+  var ext = new Array();
+  var ifaces = os.networkInterfaces();
+  var keys = Object.keys(ifaces);
+  if(iface) {
+    keys = keys.filter(key => key === iface);
+  }
+  keys.forEach((name) => {
+    ext = ext.concat(ifaces[name].filter(
+      inst => !inst.internal && inst.family === family
+    ))
+  });
+  return ext[0].address;
+}
 
 const hash = (text, algo = hash_algo) => {
   return crypto.createHash(algo)
@@ -201,6 +217,7 @@ const loadKey = (address = 'default', type = 'private', returnText = false) => {
 };
 
 module.exports = {
+  getMyAddress,
   hash,
   timestamp,
   stringToKey,

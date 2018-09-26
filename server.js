@@ -4,7 +4,6 @@ require('./config/config');
 const {URL} = require('url');
 const express = require('express');
 const bodyParser = require('body-parser');
-const moment = require('moment')
 
 const {Blockchain} = require('./blockchain/blockchain');
 const utils = require('./blockchain/utils');
@@ -17,11 +16,15 @@ app.use(bodyParser.json());
 var bc = new Blockchain();
 
 app.get('/chain', (req, res) => {
-  res.send({
+  res.status(200).send({
     version: bc.blockVersion,
     chain: bc.chain,
     length: bc.length
   });
+});
+
+app.get('/chain/length', (req, res) => {
+  res.status(200).send(bc.length);
 });
 
 app.post('/nodes/register', (req, res) => {
@@ -118,6 +121,14 @@ app.get('/blocks/:index', (req, res) => {
   }
 });
 
+app.get('/blocks/last', (req, res) => {
+  try {
+    res.status(200).send(bc.lastBlock);
+  } catch(e) {
+    res.status(400).send({error: e});
+  }
+});
+
 app.post('/blocks', (req, res) => {
   try {
     // check validity of block, if only one block behind and valid add
@@ -139,7 +150,8 @@ app.post('/blocks', (req, res) => {
 app.get('/mine', (req, res) => {
   //var block = bc.mine();
   //res.status(201).send(block);
-  bc.mine((block) => {
+  console.log('manual mine check');
+  mine((block) => {
     res.status(201).send(block);
   })
 });
@@ -154,17 +166,26 @@ var server = app.listen(port, () => {
  * automatic function to check nodes for health and remove
  */
 
-function mine() {
+ function autoMine() {
    console.log('automine check');
+   mine((block) => {
+     var waitTime = Math.floor(Math.random() * 20000) + 5000;  // TODO: make config vars
+     setTimeout(mine,waitTime);
+   });
+ }
+
+async function mine(callback) {
    if(bc.currentTransactions.length > 0) {
-     console.log('...current transactions found, mining');
      bc.mine((block) => {
-       console.log(`...${block.index}: ${block.transactions.length} transactions.`);
+       console.log(`mined ${block.index}: ${block.transactions.length} transactions.`);
+       if(callback) {
+         callback(block);
+       } else {
+         return block;
+       }
      });
    }
-   var waitTime = Math.floor(Math.random() * 20000) + 5000;  // TODO: make config vars
-   setTimeout(mine,waitTime);
 }
-setTimeout(mine,20000);
+setTimeout(autoMine,20000);
 
 module.exports = {app};
