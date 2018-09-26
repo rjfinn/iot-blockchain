@@ -87,7 +87,7 @@ class Blockchain {
     return transactions;
   }
 
-  getTransactionsByRecipientAndBlock(recepient, blocks) {
+  getTransactionsByRecipientAndBlock(recepient, block) {
     var blockObj;
     if(typeof block === 'number' || typeof block === 'string') {
       blockObj = this.getBlock(block);
@@ -104,7 +104,7 @@ class Blockchain {
     }
     var transactions = {};
     blocks.forEach((elem) => {
-      transactions[elem.index] = this.getTransactionsByRecepientAndBlock(recepient,elem);
+      transactions[elem.index] = this.getTransactionsByRecipientAndBlock(recepient, elem);
     });
     return transactions;
   }
@@ -112,7 +112,7 @@ class Blockchain {
   getTransactionsByRecipientAfterBlock(recepient, block_index) {
     var blocks = new Array();
     for(var i = this.length; i > block_index; i--) {
-      blocks.push(i);
+      blocks.push(i - 1);
     }
     return this.getTransactionsByRecipient(recepient, blocks);
   }

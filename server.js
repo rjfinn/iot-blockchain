@@ -84,6 +84,7 @@ app.get('/transactions/recipient/:address/:index', (req, res) => {
     var txns = bc.getTransactionsByRecipientAfterBlock(req.params.address,req.params.index);
     res.status(200).send(txns);
   } catch(e) {
+    console.log(e);
     res.status(400).send({error: e});
   }
 });
@@ -184,13 +185,13 @@ var server = app.listen(port, () => {
  * automatic function to check nodes for health and remove
  */
 
- function autoMine() {
+function autoMine() {
    console.log('automine check');
    mine((block) => {
      var waitTime = Math.floor(Math.random() * 20000) + 5000;  // TODO: make config vars
-     setTimeout(mine,waitTime);
+     setTimeout(autoMine,waitTime);
    });
- }
+}
 
 async function mine(callback) {
    if(bc.currentTransactions.length > 0) {
@@ -202,6 +203,8 @@ async function mine(callback) {
          return block;
        }
      });
+   } else {
+     callback(null);
    }
 }
 setTimeout(autoMine,20000);
