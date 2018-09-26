@@ -19,7 +19,7 @@ The config.json file is used for the server, but not committed to the repo, so y
 ```json
 {
   "development": {
-    "PORT": 5001,
+    "PORT": 3000,
     "NODES": [
 			{
 				"protocol":	"http",

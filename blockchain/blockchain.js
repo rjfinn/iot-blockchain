@@ -87,7 +87,7 @@ class Blockchain {
     return transactions;
   }
 
-  getTransactionsByRecipientAndBlock(recepient, block) {
+  getTransactionsByRecipientAndBlock(recepient, blocks) {
     var blockObj;
     if(typeof block === 'number' || typeof block === 'string') {
       blockObj = this.getBlock(block);
