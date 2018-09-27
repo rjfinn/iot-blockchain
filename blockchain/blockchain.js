@@ -94,7 +94,7 @@ class Blockchain {
     } else {
       blockObj = block;
     }
-    console.log(blockObj.index, blockObj.previousHash);
+    //console.log(blockObj.index, blockObj.previousHash);
     var transactions = blockObj.transactions.filter((txn) => txn.recipient === recipient);
     return transactions;
   }

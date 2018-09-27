@@ -4,6 +4,7 @@ require('./config/config');
 const http = require("http");
 const https = require("http");
 const {URL} = require('url');
+const {exec} = require('child_process');
 
 const utils = require('./blockchain/utils');
 
@@ -41,7 +42,25 @@ function getRecentTransactions() {
         res.on('end', () => {
           try {
             var parsedData = JSON.parse(rawData);
-            console.log(parsedData);
+            Object.keys(parsedData).forEach((block) => {
+              if(block < last_index) {
+                last_index = block;
+              }
+              var txns = parsedData[block];
+              txns.forEach((txn) => {
+                var txn_str = utils.transactionToString(txn.sender, txn.nonce, key.address, txn.amount, txn.data);
+                if(utils.getAddress(txn.publicKey) === txn.sender && utils.verifySign(txn.publicKey, txn_str, txn.signature)) {
+                  if(txn.data.hasOwnProperty('commands')) {
+                    //console.log(txn.data['commands']);
+                    txn.data['commands'].forEach((cmd) => {
+                      if(cmd.hasOwnProperty('setLED')) {
+                        console.log('set LED to ',cmd.setLED);
+                      }
+                    });
+                  }
+                }
+              })
+            })
           } catch(e) {
             console.error(e);
           }
