@@ -176,8 +176,8 @@ app.get('/mine', (req, res) => {
 });
 
 var server = app.listen(port, () => {
-  var url = server.address();
-  console.log(`Started at ${url.address}:${url.port}`);
+  var ip = utils.getMyAddress();
+  console.log(`Started at ${ip}:${port}`);
 });
 
 /* TODO:
