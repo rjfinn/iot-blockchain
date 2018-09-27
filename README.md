@@ -21,16 +21,8 @@ The config.json file is used for the server, but not committed to the repo, so y
   "development": {
     "PORT": 3000,
     "NODES": [
-			{
-				"protocol":	"http",
-				"hostname":	"127.0.0.1",
-				"port":			3000
-			},
-			{
-				"protocol":	"http",
-				"hostname":	"127.0.0.1",
-				"port":			5000
-			}
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5000"
 		],
 		"TRUSTED": [
 			"0b53802081c3fbc6193bce1e8f71d39f8c5de0bd",
