@@ -1,0 +1,119 @@
+{
+	"variables": [],
+	"info": {
+		"name": "IoT Blockchain",
+		"_postman_id": "3778d55e-a5ac-5e77-4ac3-269ab8c9f8fa",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET chain",
+			"request": {
+				"url": "http://localhost:3001/chain",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "POST good transaction",
+			"request": {
+				"url": "http://localhost:3001/transaction",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n\t\"recipient\": \"4b9f16e018109b99029bc0379b3075985c434c05\",\n\t\"amount\": 1.0,\n\t\"data\": {},\n\t\"signature\": \"30450221009b8d5bb381bf34be3cf2aa34bb4c4d40ec08a37cfb3e24974bc9bc88f53de5db0220193cecef444927f820e2bd211db9457b9f89a85b6d1c0b2ef8a00d4f006698b1\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "POST bad transaction",
+			"request": {
+				"url": "http://localhost:3001/transaction",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n\t\"recipient\": \"4b9f16e018109b99029bc0379b3075985c434c05\",\n\t\"amount\": 1.0,\n\t\"data\": {},\n\t\"signature\": \"foobar\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET mine",
+			"request": {
+				"url": "http://localhost:3001/mine",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET current transactions",
+			"request": {
+				"url": "http://localhost:3001/transactions/current",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "GET specific transaction",
+			"request": {
+				"url": "http://localhost:3001/transactions/dd971ab111d30c6b6500d3d637009bebc93fe6a492a3a72a494c5fc849a81991",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n\t\"recipient\": \"4b9f16e018109b99029bc0379b3075985c434c05\",\n\t\"amount\": 1.0,\n\t\"data\": {},\n\t\"signature\": \"30450221009b8d5bb381bf34be3cf2aa34bb4c4d40ec08a37cfb3e24974bc9bc88f53de5db0220193cecef444927f820e2bd211db9457b9f89a85b6d1c0b2ef8a00d4f006698b1\"\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
