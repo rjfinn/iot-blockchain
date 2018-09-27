@@ -30,6 +30,7 @@ function getRequest(path, callback) {
 
 function getRecentTransactions() {
     var path = `/transactions/recipient/${key.address}/${last_index}`;
+    //console.log(path);
     getRequest(path, (res) => {
       // TODO: iterate on blocks and txns
       if(res.statusCode === 200) {

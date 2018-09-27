@@ -87,24 +87,31 @@ class Blockchain {
     return transactions;
   }
 
-  getTransactionsByRecipientAndBlock(recepient, block) {
+  getTransactionsByRecipientAndBlock(recipient, block) {
     var blockObj;
     if(typeof block === 'number' || typeof block === 'string') {
       blockObj = this.getBlock(block);
     } else {
       blockObj = block;
     }
-    var transactions = blockObj.transactions.filter((txn) => txn.recepient === recepient);
+    console.log(blockObj.index, blockObj.previousHash);
+    var transactions = blockObj.transactions.filter((txn) => txn.recipient === recipient);
     return transactions;
   }
 
   getTransactionsByRecipient(recepient, blocks = null) {
     if(!Array.isArray(blocks)) {
       blocks = this.chain;
+    } else {
+      blocks = blocks.reverse();
     }
     var transactions = {};
     blocks.forEach((elem) => {
-      transactions[elem.index] = this.getTransactionsByRecipientAndBlock(recepient, elem);
+      var index = elem;
+      if(typeof elem !== 'number') {
+        index = elem.index;
+      }
+      transactions[index] = this.getTransactionsByRecipientAndBlock(recepient, elem);
     });
     return transactions;
   }
@@ -114,6 +121,7 @@ class Blockchain {
     for(var i = this.length; i > block_index; i--) {
       blocks.push(i - 1);
     }
+    //console.log(block_index, blocks);
     return this.getTransactionsByRecipient(recepient, blocks);
   }
 
@@ -200,7 +208,7 @@ class Blockchain {
   newBlock(proof, previousHash) {
     var block = {
       index:          this.chain.length,
-      transactions:   this.currentTransactions,
+      transactions:   this.currentTransactions.map((txn) => {txn.mined = true; return txn;}),
       proof:          proof,
       previousHash:   previousHash || utils.hash(this.chain[-1]),
       timestamp:      utils.timestamp()

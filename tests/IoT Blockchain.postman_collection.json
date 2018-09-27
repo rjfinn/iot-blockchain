@@ -1,0 +1,190 @@
+{
+	"info": {
+		"_postman_id": "3778d55e-a5ac-5e77-4ac3-269ab8c9f8fa",
+		"name": "IoT Blockchain",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "GET chain",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:3000/chain",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"chain"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST good transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n  \"recipient\": \"bbd38a319fac9474318c14603b985fd50b8e5909\",\n  \"nonce\": 1,\n  \"amount\": 1.0,\n  \"data\": {\n  \t\"commands\": [\n  \t\t{\"setLED\": \"red\"}\n  \t]\n  },\n  \"signature\": \"3045022100cb3a33ba92ba5dc88517ddbe33f92ebf08fd1838e0b83f30e4ecd4250da3a58a022011c105267f5c8f210a3a6957a04e2d76082bb02110405c379209e040260ca33e\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3000/transactions",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"transactions"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST bad transaction",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n  \"recipient\": \"4b9f16e018109b99029bc0379b3075985c434c05\",\n  \"amount\": 1.0,\n  \"data\": {},\n  \"signature\": \"foobar\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3001/transaction",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"transaction"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET mine",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:3001/mine",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"mine"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET current transactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:3001/transactions/current",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"transactions",
+						"current"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET specific transaction",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"publicKey\": \"041dd1e614a866ada4c511cd687e386d67945b522b3d1868cabda5648fefc59f0531495c2c333559033cb0b7726f32ae7fff1f02878aa56b1f7627bd3f3ed44fb1\",\n  \"recipient\": \"4b9f16e018109b99029bc0379b3075985c434c05\",\n  \"amount\": 1.0,\n  \"data\": {},\n  \"signature\": \"30450221009b8d5bb381bf34be3cf2aa34bb4c4d40ec08a37cfb3e24974bc9bc88f53de5db0220193cecef444927f820e2bd211db9457b9f89a85b6d1c0b2ef8a00d4f006698b1\"\n}"
+				},
+				"url": {
+					"raw": "http://localhost:3001/transactions/dd971ab111d30c6b6500d3d637009bebc93fe6a492a3a72a494c5fc849a81991",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3001",
+					"path": [
+						"transactions",
+						"dd971ab111d30c6b6500d3d637009bebc93fe6a492a3a72a494c5fc849a81991"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET recent transactions by addr",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"url": {
+					"raw": "http://localhost:3000/transactions/recipient/bbd38a319fac9474318c14603b985fd50b8e5909/0",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"transactions",
+						"recipient",
+						"bbd38a319fac9474318c14603b985fd50b8e5909",
+						"0"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
