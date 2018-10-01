@@ -20,17 +20,22 @@ function getNode() {
 }
 
 function getRequest(path, callback) {
-  var node = getNode();
-  var req = eval(node.protocol.substring(0,node.protocol.length - 1));
-  req.get({
-    hostname: node.hostname,
-    port:     node.port,
-    path:     path
-  }, (res) => {callback(res)});
+  try {
+    var node = getNode();
+    var req = eval(node.protocol.substring(0,node.protocol.length - 1));
+    req.get({
+      hostname: node.hostname,
+      port:     node.port,
+      path:     path
+    }, (res) => {callback(res)});
+  } catch(e) {
+    console.log('cannot connect to', node.hostname, node.port, path);
+  }
 }
 
 function getRecentTransactions() {
-    var path = `/transactions/recipient/${key.address}/${last_index}`;
+    var check_index = ParseInt(last_index) + 1;
+    var path = `/transactions/recipient/${key.address}/${check_index}`;
     //console.log(path);
     getRequest(path, (res) => {
       // TODO: iterate on blocks and txns
@@ -43,7 +48,7 @@ function getRecentTransactions() {
           try {
             var parsedData = JSON.parse(rawData);
             Object.keys(parsedData).forEach((block) => {
-              if(block < last_index) {
+              if(block > last_index) {
                 last_index = block;
               }
               var txns = parsedData[block];
@@ -55,6 +60,7 @@ function getRecentTransactions() {
                     txn.data['commands'].forEach((cmd) => {
                       if(cmd.hasOwnProperty('setLED')) {
                         console.log('set LED to ',cmd.setLED);
+                        exec(`python ../iot_led.py ${cmd.setLED}`);
                       }
                     });
                   }
@@ -91,7 +97,7 @@ function init() {
 function main () {
   // cycle
   getRecentTransactions();
-  //setTimeout(main,3000);
+  setTimeout(main,3000);
 }
 
 // start app
